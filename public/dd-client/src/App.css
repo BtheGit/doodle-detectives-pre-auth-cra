@@ -1,0 +1,96 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 80px;
+}
+
+.App-header {
+  background-color: #222;
+  height: 150px;
+  padding: 20px;
+  color: white;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#room-container {
+  height: 100%;
+  width: 100%;
+  background-color: blue;
+  display: flex;
+  flex-direction: row;
+}
+
+#canvas-container {
+  height: 100%;
+  width: 80%;
+  background-color: #A6F6EF;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+#canvas-container canvas {
+  background-color: white;
+}
+
+#sidebar-container {
+  height: 100%;
+  width: 20%;
+  background-color: #6267C6;
+}
+
+#chat-container {
+  height: 70%;
+  width: 100%;
+  background-color: purple;
+}
+
+#chat-display {
+  height: 90%;
+  width: 100%;
+  background-color: #E9C9F9;
+}
+
+
+.chat-message {
+  font-size: 18px;
+}
+
+.chat-message-name {
+  font-weight: bolder;
+}
+
+#chat-input {
+  height: 10%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background-color: #FF74F0;
+}
+
+#chat-input input {
+  width: 100%;
+  height: 100%;
+}
+
+#status-container {
+  height: 30%;
+  width: 100%;
+  background-color: #04A5BD;
+}
