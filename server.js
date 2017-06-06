@@ -56,29 +56,29 @@ require('./config/passportConfig.js')
 app.use(passport.initialize());
 app.use(passport.session());
 
-// // Enable CORS from client-side
-// app.use(function(req, res, next) {  
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
-//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials");
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   next();
-// });
+// Enable CORS from client-side
+app.use(function(req, res, next) {  
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials");
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
 
 // // The flash middleware let's us use req.flash('error', 'Shit!'), which will then pass that message to the next page the user requests
 app.use(flash());
 
-//TODO: configure routes
-app.get('/*', (req, res) => {
-	console.log(req.session)
-	console.log(req.user)
-	res.sendFile(path.join(__dirname, '/public/views/index.html'))
+
+//TODO: Route for API requests (list of active game sessions)
+app.get('/API/getactiveroomslist', (req, res) => {
+	const rooms = generateSessionsListForAPIRequests(gameSessionsMap)
+	res.json(rooms)
 })
 
-// app.get('/room', (req, res) => {
-// 	console.log(req.session)
-// 	res.sendFile(path.join(__dirname, '/public/app/index.html'))	
-// })
+//TODO: configure routes
+app.get('/*', (req, res) => {
+	res.sendFile(path.join(__dirname, '/public/app/index.html'))
+})
 
 //TODO: Create Map of Game Sessions
 const GameClient = require('./components/GameClient');
@@ -105,7 +105,6 @@ io_gameroom.on('connection', (socket) => {
 	//gameroomSocketHandlers also contains the disconnect logic for the socket
 	//TODO Game logic functions and loop
 	socket.on('setup_client', (packet) => {
-		console.log('setup packet', packet)
 		client = createGameClient(socket, packet.name);
 		console.log('Client created', client.name)
 		if(!packet.sessionId) {
@@ -121,7 +120,8 @@ io_gameroom.on('connection', (socket) => {
 				  color: generateRandomColor()
 				}
 			});
-			gameroomSocketHandlers(socket, client, session);
+			//Initiate Packet Handlers
+			gameroomSocketHandlers(socket, client, session, gameSessionsMap);
 		}
 		else  {
 			console.log('Client joined session')
@@ -133,21 +133,40 @@ io_gameroom.on('connection', (socket) => {
 				type: 'setup_session',
 				payload: {
 				  id: session.id,
-				  color: generateRandomColor()
+				  color: generateRandomColor(),
+				  chatLog: session.chatLog
 				}
 			});
 			//Update clients with new player joined to session
 			broadcastSession(session);
-			gameroomSocketHandlers(socket, client, session);
+			//Initiate Packet Handlers
+			gameroomSocketHandlers(socket, client, session, gameSessionsMap);
+
 		}	
-		//Initiate Packet Handlers
 	})
 
-	//Restore Chat Logs (this will only happen if client is reconnecting once user auth is implemented)
-	// restoreClientChatLog(socket, chatLog);
 
 })
 
+//####################### DB Logic ##########################
+
+//Converts relevant info from Map into an array of objects to be rendered on the menu screen as room choices.
+//As of now this is only room id and active players. 
+//TODO: add client names
+function generateSessionsListForAPIRequests(map) {
+	let sessionsList = [];
+	let rooms = [...map.entries()];
+	rooms.forEach(([sessionId, session]) => {
+		//Convert Set into Array to extract names
+		let clients = Array.from([...session.clients]);
+		clients = clients.map(client => client.name);
+		sessionsList.push({sessionId, clients})
+
+	})
+	return sessionsList;
+}
+
+//################################################
 //############ GAMEROOM LOGIC ####################
 
 //TODO: Wait for players
@@ -184,101 +203,8 @@ function createGameClient(socket, name, id = generateRandomId()) {
 	return new GameClient(socket, name, id);
 }
 
-//Since I'm not using this to generate local copies of games, I really only need to send a list of
-//player names here. This is overkill.
-// function broadcastSession(session) {
-// 	if(session) {
-// 		//extract all clients into new array using spread operator
-// 		const clients = [...session.clients] || []; //To avoid server crash if there are no clients
-// 		clients.forEach( client => {
-// 			client.send({
-// 				type: 'broadcast_session',
-// 				clients: {
-// 					//Receiving client will self-identify with 'you'
-// 					self: client.id,
-// 					//object of all client ids and current state
-// 					players: clients.map(client => {
-// 						return {
-// 							id: client.id,
-// 							name: client.name,
-// 							color: client.color
-// 						}
-// 					})
-// 				}
-// 			})
-// 		})
-// 	}
-// 	//This will update the DB when implemented to track rooms and occupants
-// 	// parseMapForDB(sessionsMap);
-// }
-
-
-// const generateChatPacket = payload => {
-// 	return {
-// 		type: 'chat_message',
-// 		payload: {
-// 			name: payload.name,
-// 			time: payload.time,
-// 			content: payload.content
-// 		}
-// 	};
-// };
-
-//EARLY TESTING DEPRECATED // can be used for sitewide messaging
-// const broadcastChatMessage = packet => {
-// 	io_gameroom.emit('packet', packet);	
-// };
-
-//TODO
-// const restoreClientChatLog = (socket, log) => {
-// 	log.map(entry => {
-// 		sendChatMessage(socket, generateChatPacket(entry));
-// 	});
-// };
-
-
-// const gameroomSocketHandlers = (socket, client, session) => {
-
-// 	//Handles typical client communications (chat/game)
-// 	socket.on('packet', (packet) => {
-// 		// console.log('Packet received: ', packet.type)
-// 		if(packet) {
-// 			if(packet.type === 'chat_message') {
-// 				//Store message to log, generate packet for broadcast, then broadcast it
-// 				session.addChatMessage(packet.payload)
-// 				const newPacket = generateChatPacket(packet.payload);
-// 				//Chat messages will be broadcast to everybody 
-// 				//(client will only see own message on return from server for easy sync)
-// 				client.broadcast(newPacket);
-// 			}
-// 			else if(packet.type === 'path') {
-// 				//TODO: create an array of paths for restore (and separate them by turn for voting?)
-
-// 				client.broadcast(packet)
-// 			}
-// 		}
-// 	});
-
-// 	socket.on('disconnect', () => {
-// 		const session = client.session;
-// 		if(session) {
-
-// 			console.log('Client disconnected from session', session.id);
-// 			session.leave(client);
-
-// 			//Update clients when a player disconnects
-// 			//Or terminate session altogether
-// 			if(session.clients.size) {
-// 				broadcastSession(session);
-// 			} else {
-// 				console.log(`Session ${session.id} removed`)
-// 				gameSessionsMap.delete(session.id)				
-// 			}
-// 		}
-
-// 	})
-// };
-
+//######################################################
+//######################################################
 
 server.listen(port);
 console.log('Server is listening on port: ', port)

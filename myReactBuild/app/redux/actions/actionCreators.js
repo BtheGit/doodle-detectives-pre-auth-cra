@@ -1,3 +1,5 @@
+import 'whatwg-fetch';
+
 //sync
 
 export function login() {
@@ -26,6 +28,13 @@ export function setPlayerName(name) {
 	});
 };
 
+export function updateActiveRooms(rooms) {
+	return({
+		type: 'UPDATE_ACTIVE_ROOMS',
+		payload: rooms
+	})
+}
+
 //async
 export function playerLogin(name) {
 	return function (dispatch) {
@@ -43,8 +52,11 @@ export function playerLogout() {
 	};
 };
 
-export function practiceThunk() {
+export function updateRoomsFromServer() {
 	return function(dispatch) {
-		setTimeout(() => {dispatch(updateScore(5))}, 2000)
-	};
-};
+		fetch('http://localhost:8000/API/getactiveroomslist')
+			.then(response => response.json())
+			.then(json =>	dispatch(updateActiveRooms(json)))
+			.catch(error => console.log('Error in API request', error))	
+	}
+}

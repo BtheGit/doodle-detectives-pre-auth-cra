@@ -1,6 +1,6 @@
 const {generateChatPacket, broadcastSession} = require('./socketHelpers');
 
-const gameroomSocketHandlers = (socket, client, session) => {
+const gameroomSocketHandlers = (socket, client, session, gameSessionsMap) => {
 
 	//Handles typical client communications (chat/game)
 	socket.on('packet', (packet) => {
@@ -12,7 +12,8 @@ const gameroomSocketHandlers = (socket, client, session) => {
 				const newPacket = generateChatPacket(packet.payload);
 				//Chat messages will be broadcast to everybody 
 				//(client will only see own message on return from server for easy sync)
-				client.broadcast(newPacket);
+				client.send(newPacket); //send message back (could have two types of broadcast methods)
+				client.broadcast(newPacket); //send to all other clients
 			}
 			else if(packet.type === 'path') {
 				//TODO: create an array of paths for restore (and separate them by turn for voting?)

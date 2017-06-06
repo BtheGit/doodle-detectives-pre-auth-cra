@@ -3,9 +3,9 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { Switch, Route, Redirect } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
-import Room from './components/gameroom/Room.js';
-import Lobby from './components/Lobby.js';
-import Login from './components/Login.js';
+import Room from './components/gameroom/Room';
+import Lobby from './components/lobby/Lobby';
+import Login from './components/Login';
 import './App.css';
 
 class App extends Component {

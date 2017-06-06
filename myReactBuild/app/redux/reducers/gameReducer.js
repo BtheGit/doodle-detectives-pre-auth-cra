@@ -1,7 +1,8 @@
 const initialState = {
 	playerName: '',
 	playerScore: 0,
-	isLoggedIn: false
+	isLoggedIn: false,
+	activeRooms: [],
 };
 
 const gameReducer = (state = initialState, action) => {
@@ -25,6 +26,11 @@ const gameReducer = (state = initialState, action) => {
 			return({
 				...state,
 				isLoggedIn: false
+			})
+		case 'UPDATE_ACTIVE_ROOMS':
+			return({
+				...state,
+				activeRooms: action.payload
 			})
 		default:
 			return state;

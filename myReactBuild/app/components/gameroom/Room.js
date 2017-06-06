@@ -37,13 +37,13 @@ class Room extends Component {
 
   //Socket Handlers
   handleSocketMessages = packet => {
-    console.log('Packet Received')
     if(packet.type === 'setup_session') {
       //Handle user name/socket id/etc. here
       //Player color and such will be created later when game starts
       this.setState({
         sessionId: packet.payload.id, 
-        clientColor: packet.payload.color
+        clientColor: packet.payload.color,
+        chatMessages: packet.payload.chatLog
       });
       console.log('Session:', this.state.sessionId)
       console.log('Color:', packet.payload.color, this.state.clientColor)
