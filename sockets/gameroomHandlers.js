@@ -33,7 +33,8 @@ const gameroomSocketHandlers = (socket, client, session, gameSessionsMap) => {
 			//Update clients when a player disconnects
 			//Or terminate session altogether
 			if(session.clients.size) {
-				broadcastSession(session);
+				// broadcastSession(session); //Deprecated
+				session.broadcastSessionState();
 			} else {
 				console.log(`Session ${session.id} removed`)
 				gameSessionsMap.delete(session.id)				

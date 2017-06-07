@@ -1,8 +1,18 @@
 const initialState = {
+	//Extract to separate reducer later
 	playerName: '',
+	// playerId: '', //TODO: Use thisfor socket message filtering and self-identification
 	playerScore: 0,
 	isLoggedIn: false,
 	activeRooms: [],
+	//game reducer stuff
+	playerColor: '',
+	players: [], //array of objects with keys NAME/COLOR
+	isWaitingForPlayers: false,
+	isInGame: false,
+	isMyTurn: false,
+	isFake: false,
+	clue: '',
 };
 
 const gameReducer = (state = initialState, action) => {

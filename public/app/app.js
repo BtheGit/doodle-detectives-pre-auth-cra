@@ -16447,10 +16447,20 @@ Object.defineProperty(exports, "__esModule", {
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var initialState = {
+	//Extract to separate reducer later
 	playerName: '',
+	// playerId: '', //TODO: Use thisfor socket message filtering and self-identification
 	playerScore: 0,
 	isLoggedIn: false,
-	activeRooms: []
+	activeRooms: [],
+	//game reducer stuff
+	playerColor: '',
+	players: [], //array of objects with keys NAME/COLOR
+	isWaitingForPlayers: false,
+	isInGame: false,
+	isMyTurn: false,
+	isFake: false,
+	clue: ''
 };
 
 var gameReducer = function gameReducer() {
@@ -17004,7 +17014,7 @@ var Room = function (_Component) {
     var _this = _possibleConstructorReturn(this, (Room.__proto__ || Object.getPrototypeOf(Room)).call(this, props));
 
     _this.handleSocketMessages = function (packet) {
-      if (packet.type === 'setup_session') {
+      if (packet.type === 'setup_client') {
         //Handle user name/socket id/etc. here
         //Player color and such will be created later when game starts
         _this.setState({
@@ -17013,13 +17023,19 @@ var Room = function (_Component) {
           chatMessages: packet.payload.chatLog
         });
         console.log('Session:', _this.state.sessionId);
-        console.log('Color:', packet.payload.color, _this.state.clientColor);
+      } else if (packet.type === 'temp_get_myid') {
+        _this.setState({ myId: packet.id });
       } else if (packet.type === 'broadcast_session') {
         _this.handleSessionUpdate(packet.clients);
       } else if (packet.type === 'chat_message') {
         _this.handleChatMessage(packet.payload);
       } else if (packet.type === 'path') {
         _this.handlePath(packet.payload);
+      } else if (packet.type === 'session_state_update') {
+        _this.handleSessionStateUpdate(packet.sessionState);
+      } else if (packet.type === 'game_state_update') {
+        //set local isGameActive toggle here which will prevent drawing unless activePlayer is me
+        _this.handleGameStateUpdate(packet.gameState);
       }
     };
 
@@ -17030,6 +17046,12 @@ var Room = function (_Component) {
       });
       _this.setState({ playerList: peers });
       console.log('Playerlist updated', _this.state.playerList);
+    };
+
+    _this.handleSessionStateUpdate = function (sessionState) {
+      //Do I need to filter local client out?
+      // sessionState.players = sessionState.players.filter(player => player.id !== this.state.myId)
+      _this.setState({ sessionState: sessionState });
     };
 
     _this.handleChatMessage = function (message) {
@@ -17066,14 +17088,22 @@ var Room = function (_Component) {
       _this.setupSocket();
     };
 
+    _this.componentWillUnmount = function () {
+      _this.socket.disconnect();
+    };
+
     _this.socket = null;
     _this.state = {
       socketId: '',
+      myId: '', //TEMP until auth and persistent login (necessary for self-identifying in state updates)
       //If coming from newroom route, no id will be provided, default to empty string
       sessionId: _this.props.match.params.id || '',
       clientColor: 'black',
       chatMessages: [],
-      playerList: []
+      sessionState: {
+        players: [],
+        currentSessionStatus: '' },
+      gameState: {}
     };
     return _this;
   }
@@ -17116,11 +17146,6 @@ var Room = function (_Component) {
     //############### LIFECYCLE AND RENDER METHODS ####################
 
   }, {
-    key: 'componentWillUnmount',
-    value: function componentWillUnmount() {
-      this.socket.disconnect();
-    }
-  }, {
     key: 'renderDrawingboard',
     value: function renderDrawingboard() {
       var _this3 = this;
@@ -17144,6 +17169,18 @@ var Room = function (_Component) {
       });
     }
   }, {
+    key: 'renderStatusDisplay',
+    value: function renderStatusDisplay() {
+      var state = this.state.sessionState.currentSessionStatus; //for brevity
+      var statusMessage = state === 'isGameActive' ? 'Game Active' : state === 'isWaitingToStart' ? 'Waiting to Begin' : state === 'isWaitingForPlayers' ? 'Waiting for Players' : 'Waiting for Status';
+
+      return _react2.default.createElement(
+        'div',
+        null,
+        statusMessage
+      );
+    }
+  }, {
     key: 'render',
     value: function render() {
       return _react2.default.createElement(
@@ -17153,7 +17190,8 @@ var Room = function (_Component) {
         _react2.default.createElement(
           'div',
           { id: 'sidebar-container' },
-          this.renderChatroom()
+          this.renderChatroom(),
+          this.renderStatusDisplay()
         )
       );
     }
@@ -17377,9 +17415,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var RoomsMenu = function RoomsMenu(_ref) {
 	var activeRooms = _ref.activeRooms;
 
-	console.log(activeRooms);
 
-	function showRooms() {
+	var showRooms = function showRooms() {
 		return activeRooms.map(function (room, index) {
 			return _react2.default.createElement(
 				'div',
@@ -17406,15 +17443,15 @@ var RoomsMenu = function RoomsMenu(_ref) {
 				)
 			);
 		});
-	}
+	};
 
-	function showEmpty() {
+	var showEmpty = function showEmpty() {
 		return _react2.default.createElement(
 			'div',
 			null,
 			'No Active Rooms'
 		);
-	}
+	};
 
 	return _react2.default.createElement(
 		'div',

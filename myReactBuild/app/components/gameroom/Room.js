@@ -12,11 +12,16 @@ class Room extends Component {
     this.socket = null;
     this.state = { 
       socketId: '',
+      myId: '', //TEMP until auth and persistent login (necessary for self-identifying in state updates)
       //If coming from newroom route, no id will be provided, default to empty string
       sessionId: this.props.match.params.id || '',
       clientColor: 'black',
       chatMessages: [],
-      playerList: [],
+      sessionState: {
+        players: [],
+        currentSessionStatus: '', //['isWaitingForPlayers', 'isWaitingToStart', 'isGameActive']
+      },
+      gameState: {}
     }
   }
 
@@ -37,7 +42,7 @@ class Room extends Component {
 
   //Socket Handlers
   handleSocketMessages = packet => {
-    if(packet.type === 'setup_session') {
+    if(packet.type === 'setup_client') {
       //Handle user name/socket id/etc. here
       //Player color and such will be created later when game starts
       this.setState({
@@ -46,7 +51,9 @@ class Room extends Component {
         chatMessages: packet.payload.chatLog
       });
       console.log('Session:', this.state.sessionId)
-      console.log('Color:', packet.payload.color, this.state.clientColor)
+    }
+    else if(packet.type === 'temp_get_myid'){
+      this.setState({myId: packet.id})
     }
     else if (packet.type === 'broadcast_session') {
       this.handleSessionUpdate(packet.clients)
@@ -56,6 +63,13 @@ class Room extends Component {
     }
     else if(packet.type === 'path') {
       this.handlePath(packet.payload);
+    }
+    else if(packet.type === 'session_state_update') {
+      this.handleSessionStateUpdate(packet.sessionState);
+    }
+    else if(packet.type === 'game_state_update') {
+      //set local isGameActive toggle here which will prevent drawing unless activePlayer is me
+      this.handleGameStateUpdate(packet.gameState);
     }
   }
 
@@ -67,6 +81,12 @@ class Room extends Component {
     const peers = clients.players.filter(player => player.id !== myId)
     this.setState({playerList: peers})
     console.log('Playerlist updated', this.state.playerList)
+  }
+
+  handleSessionStateUpdate = sessionState => {
+    //Do I need to filter local client out?
+    // sessionState.players = sessionState.players.filter(player => player.id !== this.state.myId)
+    this.setState({sessionState})
   }
 
   handleChatMessage = message => {
@@ -101,12 +121,20 @@ class Room extends Component {
     this.socket.emit('packet', packet);
   }
 
+  emitVoteToBegin = () => {
+    const packet = {
+      type: 'vote_to_begin',
+      clientId: this.state.myId
+    }
+    this.socket.emit('packet', packet);
+  }
+
   //############### LIFECYCLE AND RENDER METHODS ####################
   componentDidMount = () => {
     this.setupSocket();
   }
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     this.socket.disconnect();
   }
 
@@ -131,12 +159,36 @@ class Room extends Component {
     )
   }
 
+  renderStatusDisplay() {
+    const state = this.state.sessionState.currentSessionStatus; //for brevity
+    const statusMessage = (state === 'isGameActive') ? 'Game Active' 
+                        : (state === 'isWaitingToStart') ? 'Waiting to Begin'
+                        : (state === 'isWaitingForPlayers') ? 'Waiting for Players'
+                        : 'Waiting for Status';
+
+    return(
+      <div className='statusdisplay-container'>
+        <div>{statusMessage}</div>
+      </div>
+    )
+  }
+
+  renderVoteToBegin() {
+    return(
+    <div className='statusdisplay-votetobegin-container'>
+      <button onClick={}>Begin</button>
+      <div>Vote 'Begin' to get this party started! Game will commence when all players vote.</div>
+    </div>
+    )
+  }
+
   render() {
     return (
       <div id="room-container">
         {this.renderDrawingboard()}
         <div id="sidebar-container">
           {this.renderChatroom()}
+          {this.renderStatusDisplay()}
         </div>        
       </div>
     );

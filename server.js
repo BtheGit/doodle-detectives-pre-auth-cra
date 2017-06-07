@@ -103,9 +103,9 @@ io_gameroom.on('connection', (socket) => {
 	//Socket will wait for client information before creating client and (joining it to/creating) a game session
 	//gameroomSocketHandlers will be added which are the main conduit of communicating between clients in a session
 	//gameroomSocketHandlers also contains the disconnect logic for the socket
-	//TODO Game logic functions and loop
 	socket.on('setup_client', (packet) => {
 		client = createGameClient(socket, packet.name);
+		client.send({type: 'temp_get_myid', id: client.id})
 		console.log('Client created', client.name)
 		if(!packet.sessionId) {
 			console.log('Creating Game Session')
@@ -114,34 +114,39 @@ io_gameroom.on('connection', (socket) => {
 			session.join(client);
 
 			client.send({
-				type: 'setup_session',
+				type: 'setup_client',
 				payload: {
 				  id: session.id,
-				  color: generateRandomColor()
+				  color: generateRandomColor(),
+				  chatLog: session.getChatLog()
 				}
 			});
+			//Initialize session state
+			session.broadcastSessionState();
 			//Initiate Packet Handlers
 			gameroomSocketHandlers(socket, client, session, gameSessionsMap);
 		}
 		else  {
-			console.log('Client joined session')
 
 			const session = gameSessionsMap.get(packet.sessionId) || createGameSession(packet.sessionId);
 			session.join(client);
+
+			console.log(client.name, 'joined game session', session.id)
 
 			client.send({
 				type: 'setup_session',
 				payload: {
 				  id: session.id,
 				  color: generateRandomColor(),
-				  chatLog: session.chatLog
+				  chatLog: session.getChatLog()
 				}
 			});
 			//Update clients with new player joined to session
-			broadcastSession(session);
+			session.broadcastSessionState();
+			// broadcastSession(session);
 			//Initiate Packet Handlers
 			gameroomSocketHandlers(socket, client, session, gameSessionsMap);
-
+			// session.initGame();
 		}	
 	})
 
