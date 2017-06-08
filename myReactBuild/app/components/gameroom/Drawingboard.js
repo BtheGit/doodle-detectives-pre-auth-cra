@@ -72,10 +72,16 @@ export default class Drawingboard extends Component {
 		this.canvas.addEventListener('mouseup', () => this.setState({isDrawing: false}))
 		this.canvas.addEventListener('mouseout', () => this.setState({isDrawing: false}))
 		this.canvas.addEventListener('mousemove', (event) => {
-			if(this.state.isDrawing) {
-				const path = this.buildPath(event.offsetX, event.offsetY)
-				this.sendPath(path)
-				this.drawPath(path);
+			//Only Draw and Emit paths if a) the game is not in session or b) it's in the drawing phase and it's your turn
+			const gameActive = this.props.sessionStatus === 'isGameActive' ? true : false;
+			if(gameActive && !this.props.isMyTurn) {
+				return;
+			} else {
+				if(this.state.isDrawing) {
+					const path = this.buildPath(event.offsetX, event.offsetY)
+					this.sendPath(path)
+					this.drawPath(path);
+				}
 			}
 		})
 	}

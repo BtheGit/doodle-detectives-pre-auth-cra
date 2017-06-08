@@ -16916,10 +16916,16 @@ var Drawingboard = function (_Component) {
 				return _this.setState({ isDrawing: false });
 			});
 			_this.canvas.addEventListener('mousemove', function (event) {
-				if (_this.state.isDrawing) {
-					var path = _this.buildPath(event.offsetX, event.offsetY);
-					_this.sendPath(path);
-					_this.drawPath(path);
+				//Only Draw and Emit paths if a) the game is not in session or b) it's in the drawing phase and it's your turn
+				var gameActive = _this.props.sessionStatus === 'isGameActive' ? true : false;
+				if (gameActive && !_this.props.isMyTurn) {
+					return;
+				} else {
+					if (_this.state.isDrawing) {
+						var path = _this.buildPath(event.offsetX, event.offsetY);
+						_this.sendPath(path);
+						_this.drawPath(path);
+					}
 				}
 			});
 		};
@@ -16927,6 +16933,10 @@ var Drawingboard = function (_Component) {
 		_this.componentDidMount = function () {
 			_this.props.onRef(_this); //To allow Parent to access child methods
 			_this.setupCanvas();
+		};
+
+		_this.componentWillUnmount = function () {
+			//remove event listeners
 		};
 
 		_this.ref = null;
@@ -17081,12 +17091,12 @@ var Room = function (_Component) {
         type: 'path',
         payload: path
       };
+
       _this.socket.emit('packet', packet);
     };
 
     _this.emitVoteToBegin = function () {
-      console.log('voted');
-      //Toggle Display
+      //TODO Toggle Display (need to reset this when game initializes!)
       _this.setState({ hasVotedToBegin: true });
       var packet = {
         type: 'vote_to_begin'
@@ -17113,8 +17123,12 @@ var Room = function (_Component) {
       hasVotedToBegin: false, //Used for conditionally rendering status display after voting
       sessionState: {
         players: [],
-        currentSessionStatus: '' },
-      gameState: {}
+        currentSessionStatus: 'isGameActive' },
+      gameState: {
+        currentPhase: '', //['drawing', 'detecting', 'approving', 'gameover']
+        currentTurn: '', //Player color (name is still secret)
+        isMyTurn: false
+      }
     };
     return _this;
   }
@@ -17169,6 +17183,9 @@ var Room = function (_Component) {
         emitPath: this.emitPath,
         clientColor: this.state.clientColor,
         clientId: this.state.socketId
+        //TODO Gonna pass session/game state down for preventing drawing. This should be moved to redux store
+        , sessionStatus: this.state.sessionState.currentSessionStatus,
+        isMyTurn: this.state.gameState.isMyTurn
       });
     }
   }, {

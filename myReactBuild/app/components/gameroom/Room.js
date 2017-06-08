@@ -20,7 +20,7 @@ class Room extends Component {
       hasVotedToBegin: false, //Used for conditionally rendering status display after voting
       sessionState: {
         players: [],
-        currentSessionStatus: '', //['isWaitingForPlayers', 'isWaitingToStart', 'isGameActive']
+        currentSessionStatus: 'isGameActive', //['isWaitingForPlayers', 'isWaitingToStart', 'isGameActive']
       },
       gameState: {
         currentPhase: '', //['drawing', 'detecting', 'approving', 'gameover']
@@ -123,20 +123,15 @@ class Room extends Component {
       type: 'path',
       payload: path
     };
-    this.socket.emit('packet', packet);
+
+    this.socket.emit('packet', packet);      
   }
 
   emitVoteToBegin = () => {
-    console.log('voted')
-    //Toggle Display (need to reset this when game initializes!)
+    //TODO Toggle Display (need to reset this when game initializes!)
     this.setState({hasVotedToBegin: true});
     const packet = {
       type: 'vote_to_begin',
-      //deprecated in favor just passing client objects
-      // payload: {
-      //   name: this.props.playerName,
-      //   id: this.state.myId       
-      // }
     }
     this.socket.emit('packet', packet);
   }
@@ -158,6 +153,9 @@ class Room extends Component {
         emitPath = {this.emitPath}
         clientColor = {this.state.clientColor}
         clientId = {this.state.socketId}
+        //TODO Gonna pass session/game state down for preventing drawing. This should be moved to redux store
+        sessionStatus = {this.state.sessionState.currentSessionStatus}
+        isMyTurn = {this.state.gameState.isMyTurn}
       />
     )
   }
