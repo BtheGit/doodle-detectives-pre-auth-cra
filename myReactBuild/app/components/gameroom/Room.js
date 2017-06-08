@@ -17,11 +17,16 @@ class Room extends Component {
       sessionId: this.props.match.params.id || '',
       clientColor: 'black',
       chatMessages: [],
+      hasVotedToBegin: false, //Used for conditionally rendering status display after voting
       sessionState: {
         players: [],
         currentSessionStatus: '', //['isWaitingForPlayers', 'isWaitingToStart', 'isGameActive']
       },
-      gameState: {}
+      gameState: {
+        currentPhase: '', //['drawing', 'detecting', 'approving', 'gameover']
+        currentTurn: '', //Player color (name is still secret)
+        isMyTurn: false,
+      }
     }
   }
 
@@ -122,9 +127,16 @@ class Room extends Component {
   }
 
   emitVoteToBegin = () => {
+    console.log('voted')
+    //Toggle Display (need to reset this when game initializes!)
+    this.setState({hasVotedToBegin: true});
     const packet = {
       type: 'vote_to_begin',
-      clientId: this.state.myId
+      //deprecated in favor just passing client objects
+      // payload: {
+      //   name: this.props.playerName,
+      //   id: this.state.myId       
+      // }
     }
     this.socket.emit('packet', packet);
   }
@@ -159,26 +171,44 @@ class Room extends Component {
     )
   }
 
-  renderStatusDisplay() {
-    const state = this.state.sessionState.currentSessionStatus; //for brevity
-    const statusMessage = (state === 'isGameActive') ? 'Game Active' 
-                        : (state === 'isWaitingToStart') ? 'Waiting to Begin'
-                        : (state === 'isWaitingForPlayers') ? 'Waiting for Players'
-                        : 'Waiting for Status';
+  //COMPONENTIZE THE STATUS DISPLAY POST HASTE
+  selectStatusDisplay() {
+    const currentState = this.state.sessionState.currentSessionStatus; //for brevity
+    if(currentState === 'isGameActive') {
+      return <div>Game Active</div>; //This will not be a message. Showing turns/clues/etc. //GAME STATUS COMPONENT
+    }
+    else { //SESSION STATUS COMPONENT
+      if(currentState === 'isWaitingForPlayers') {
+        return this.renderStatusMessage('Waiting for Players');
+      } 
+      else if (currentState === 'isWaitingToStart') {
+        return !this.state.hasVotedToBegin ? this.renderVoteToBegin() 
+                                     : this.renderStatusMessage('Waiting for other players to vote.')
+      }
+      else {
+        return this.renderStatusMessage('Waiting for Server...');
+      }
+    }
+  }
 
-    return(
+  renderStatusDisplay() {
+    return (
       <div className='statusdisplay-container'>
-        <div>{statusMessage}</div>
+        {this.selectStatusDisplay()}
       </div>
     )
   }
 
+  renderStatusMessage(message) {
+    return <div className="statusdisplay-message">{message}</div>
+  }
+
   renderVoteToBegin() {
     return(
-    <div className='statusdisplay-votetobegin-container'>
-      <button onClick={}>Begin</button>
-      <div>Vote 'Begin' to get this party started! Game will commence when all players vote.</div>
-    </div>
+      <div className='statusdisplay-votetobegin-container'>
+        <button onClick={this.emitVoteToBegin}>Begin</button>
+        <div>Vote 'Begin' to get this party started! Game will commence when all players vote.</div>
+      </div>
     )
   }
 

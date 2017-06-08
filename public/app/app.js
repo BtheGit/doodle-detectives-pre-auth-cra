@@ -17084,6 +17084,16 @@ var Room = function (_Component) {
       _this.socket.emit('packet', packet);
     };
 
+    _this.emitVoteToBegin = function () {
+      console.log('voted');
+      //Toggle Display
+      _this.setState({ hasVotedToBegin: true });
+      var packet = {
+        type: 'vote_to_begin'
+      };
+      _this.socket.emit('packet', packet);
+    };
+
     _this.componentDidMount = function () {
       _this.setupSocket();
     };
@@ -17100,6 +17110,7 @@ var Room = function (_Component) {
       sessionId: _this.props.match.params.id || '',
       clientColor: 'black',
       chatMessages: [],
+      hasVotedToBegin: false, //Used for conditionally rendering status display after voting
       sessionState: {
         players: [],
         currentSessionStatus: '' },
@@ -17168,16 +17179,64 @@ var Room = function (_Component) {
         emitChatMessage: this.emitChatMessage
       });
     }
+
+    //COMPONENTIZE THE STATUS DISPLAY POST HASTE
+
+  }, {
+    key: 'selectStatusDisplay',
+    value: function selectStatusDisplay() {
+      var currentState = this.state.sessionState.currentSessionStatus; //for brevity
+      if (currentState === 'isGameActive') {
+        return _react2.default.createElement(
+          'div',
+          null,
+          'Game Active'
+        ); //This will not be a message. Showing turns/clues/etc. //GAME STATUS COMPONENT
+      } else {
+        //SESSION STATUS COMPONENT
+        if (currentState === 'isWaitingForPlayers') {
+          return this.renderStatusMessage('Waiting for Players');
+        } else if (currentState === 'isWaitingToStart') {
+          return !this.state.hasVotedToBegin ? this.renderVoteToBegin() : this.renderStatusMessage('Waiting for other players to vote.');
+        } else {
+          return this.renderStatusMessage('Waiting for Server...');
+        }
+      }
+    }
   }, {
     key: 'renderStatusDisplay',
     value: function renderStatusDisplay() {
-      var state = this.state.sessionState.currentSessionStatus; //for brevity
-      var statusMessage = state === 'isGameActive' ? 'Game Active' : state === 'isWaitingToStart' ? 'Waiting to Begin' : state === 'isWaitingForPlayers' ? 'Waiting for Players' : 'Waiting for Status';
-
       return _react2.default.createElement(
         'div',
-        null,
-        statusMessage
+        { className: 'statusdisplay-container' },
+        this.selectStatusDisplay()
+      );
+    }
+  }, {
+    key: 'renderStatusMessage',
+    value: function renderStatusMessage(message) {
+      return _react2.default.createElement(
+        'div',
+        { className: 'statusdisplay-message' },
+        message
+      );
+    }
+  }, {
+    key: 'renderVoteToBegin',
+    value: function renderVoteToBegin() {
+      return _react2.default.createElement(
+        'div',
+        { className: 'statusdisplay-votetobegin-container' },
+        _react2.default.createElement(
+          'button',
+          { onClick: this.emitVoteToBegin },
+          'Begin'
+        ),
+        _react2.default.createElement(
+          'div',
+          null,
+          'Vote \'Begin\' to get this party started! Game will commence when all players vote.'
+        )
       );
     }
   }, {

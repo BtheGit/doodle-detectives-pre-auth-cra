@@ -13,6 +13,7 @@ class GameSession {
 	constructor(id) {
 		this.id = id;
 		this.clients = new Set;
+		this.votedToBegin = new Set;
 		this.chatLog = [];
 		this.currentSessionStatus = 'isWaitingForPlayers';
 		this.game = null;
@@ -26,6 +27,37 @@ class GameSession {
 
 	getChatLog() {
 		return this.chatLog || [];
+	}
+
+	addVoteToBegin(client) {
+		// if()
+		// this.votedToBegin = [...this.votedToBegin, client];
+		this.votedToBegin.add(client)
+		this._updateVoteStatus();
+	}
+
+	removeVoteToBegin(client) {
+		// this.votedToBegin = this.votedToBegin.filter(elem => {
+		// 	return elem.id !== client.id;
+		// })
+		this.votedToBegin.delete(client);
+		this._updateVoteStatus();
+	}
+
+	//!!!GAME Will initialize here when all votes have been collected.
+	_updateVoteStatus() {
+		if(this.currentSessionStatus !== 'isGameActive'){
+			// if(this.clients.size === this.votedToBegin.length) {
+				//should be comparing elements not just size here in case one player goes and another comes
+				//lodash _.isEquals works
+			if(this.clients.size === this.votedToBegin.size) { 
+				this.currentSessionStatus = 'isWaitingToStart';
+				this.initGame();
+			}
+			else {
+				this.currentSessionStatus = 'isWaitingForPlayers';
+			}
+		}
 	}
 
 	//perhaps I should pass this function down and allow game to use it (so game doesn't have to directly track sockets)
@@ -82,16 +114,25 @@ class GameSession {
 		if(client.session !== this) {
 			throw new Error('Client not in session')
 		}
+		//If they have already voted to start game we want to remove that vote
+		if(this.votedToBegin.has(client)) {
+			this.removeVoteToBegin(client);
+		}
 
 		this.clients.delete(client)
 		client.session = null;
 		this._checkPlayerQuotas()
 	}
 
-	//IN PROGRESS
+	//This is triggered in _updateVoteStatus() when all votes have been collected
 	initGame() {
+		//Clear votes for next game
+		this.votedToBegin.clear();
+		//This will flag the client to render the status bar differently
 		this.currentSessionStatus = 'isGameActive';
+		//Create a copy of players for the game to manipulate without affecting session members
 		const players = this._createPlayerList();
+		//Create new instance of a game (Games will only be used once)
 		this.game = new Game(players)
 		//return this.game so it's accessible to socket.io
 		//OR. Sockets are available in this.clients, so nevermind

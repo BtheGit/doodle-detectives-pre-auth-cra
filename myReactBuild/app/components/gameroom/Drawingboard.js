@@ -85,6 +85,10 @@ export default class Drawingboard extends Component {
 		this.setupCanvas();	
 	}
 
+	componentWillUnmount = () => {
+		//remove event listeners
+	}
+
 	render() {
 		return (
 			<div id="canvas-container">
