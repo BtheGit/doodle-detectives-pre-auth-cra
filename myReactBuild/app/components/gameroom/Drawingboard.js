@@ -47,16 +47,33 @@ export default class Drawingboard extends Component {
 
 	//############## LIFECYCLE & RENDER METHODS ###########
 
+	changeResolution(canvas, context, scaleFactor) {
+    // Set up CSS size if it's not set up already
+    if (!canvas.style.width)
+        canvas.style.width = canvas.width + 'px';
+    if (!canvas.style.height)
+        canvas.style.height = canvas.height + 'px';
+
+    canvas.width = Math.ceil(canvas.width * scaleFactor);
+    canvas.height = Math.ceil(canvas.height * scaleFactor);
+    context.scale(scaleFactor, scaleFactor);
+}
+
 	setupCanvas = () => {
+		const defaultSize = 800;
+		// window.devicePixelRatio = 2;
 		this.canvas = this.ref; 
 		this.ctx = this.canvas.getContext('2d');
+		const boundingRect = this.canvas.getBoundingClientRect();
 		this.canvas.width = 800;
-		this.canvas.height = 500;
+		this.canvas.height = 800;
+		this.changeResolution(this.canvas, this.ctx, 2);
 		// this.canvas.style.width = `${window.innerWidth}px`;
 		// this.canvas.style.height = `${window.innerHeight}px`;
 		// this.ctx.scale((this.canvas.width / this.canvas.style.width), (this.canvas.width / this.canvas.style.width))
 		// this.ctx.scale((this.canvas.width / this.canvas.style.width), (this.canvas.height / this.canvas.style.height))
 		// this.ctx.scale(.5, .5)
+		// this.ctx.imageSmoothingEnabled = true;
 		this.ctx.strokeStyle = '#BADA55';
 		this.ctx.lineJoin = 'round';
 		this.ctx.lineCap = 'round';
@@ -84,6 +101,7 @@ export default class Drawingboard extends Component {
 				}
 			}
 		})
+		// window.addEventListener("resize", this.handleWindowResize, false);
 	}
 
 	componentDidMount = () => {

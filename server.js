@@ -26,6 +26,7 @@ const promisify = require('es6-promisify');
 const flash = require('connect-flash');
 const morgan = require('morgan');
 const path = require('path');
+
 const port = process.env.PORT;
 const sessionOptions = {
   secret: process.env.SECRET,
@@ -40,13 +41,19 @@ const app = express();
 //TODO: Configure view engine 
 app.use(express.static(path.join(__dirname, '/public/app')));
 
+//Log requests to the console
+app.use(morgan('dev')); 
+
+// populates req.cookies with any cookies that came along with the request
+app.use(cookieParser());
+
 // Takes the raw requests and turns them into usable properties on req.body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 // Exposes a bunch of methods for validating data.
 // app.use(expressValidator());
-// populates req.cookies with any cookies that came along with the request
-app.use(cookieParser());
+
 // Sessions allow us to store data on visitors from request to request
 // This keeps users logged in and allows us to send flash messages
 app.use(session(sessionOptions));
@@ -56,14 +63,14 @@ require('./config/passportConfig.js')
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Enable CORS from client-side
-app.use(function(req, res, next) {  
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials");
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
+// Enable CORS from client-side (look into using default CORS library)
+// app.use(function(req, res, next) {  
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials");
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   next();
+// });
 
 // // The flash middleware let's us use req.flash('error', 'Shit!'), which will then pass that message to the next page the user requests
 app.use(flash());
@@ -76,8 +83,9 @@ app.get('/API/getactiveroomslist', (req, res) => {
 })
 
 //TODO: configure routes
-app.get('/*', (req, res) => {
-	res.sendFile(path.join(__dirname, '/public/app/index.html'))
+app.get('*', (req, res) => {
+	console.log(req.session)
+	res.sendFile(path.join(__dirname, '/public/app/main.html'))
 })
 
 //TODO: Create Map of Game Sessions

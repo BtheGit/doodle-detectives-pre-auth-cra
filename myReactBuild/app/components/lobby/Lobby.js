@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { playerLogin, playerLogout, updateRoomsFromServer } from '../../redux/actions/actionCreators.js'
 import RoomsMenu from './RoomsMenu';
+import './lobby.css';
 
 //Login/Logout buttons & Link to gameroom are rendered conditionally based on isLoggedIn in gameReducer store
 class Lobby extends Component {
@@ -43,29 +44,31 @@ class Lobby extends Component {
 
 	renderLoggedIn() {
 		return (
-			<div>
+			<div className="lobby-loggedin-container">
+				<h2 className="lobby-username">Name: {this.props.playerName}</h2>
 				<RoomsMenu 
 					activeRooms = {this.props.activeRooms}
 				/>
-				<div>
-					<Link to='/newroom'>Create New Room</Link>
+				<div className="lobby-misc">
+					<div className="lobby-createnewroom">
+						<Link to='/newroom'>Create New Room</Link>
+					</div>
+					<div>
+						<Link to='/room/poop'>Room: Poop</Link>
+					</div>
+					<div>
+						<Link to='/room/ugly'>Room: Ugly</Link>
+					</div>
+					<div className="lobby-logout" onClick={this.props.playerLogout}>Logout</div>
 				</div>
-				<div>
-					<Link to='/room/poop'>Room: Poop</Link>
-				</div>
-				<div>
-					<Link to='/room/ugly'>Room: Ugly</Link>
-				</div>
-				<div onClick={this.props.playerLogout}>Logout</div>
 			</div>
 		)
 	}
 
 	render() {
 		return(
-			<div>
-				<h1>LOBBY</h1>
-				{this.props.isLoggedIn ? <h2>Name: {this.props.playerName}</h2> : null}
+			<div className="lobby-container">
+				<h1 className="lobby-header">Doodle Detectives</h1>
 				{this.props.isLoggedIn ? this.renderLoggedIn() : this.renderGuest()}
 			</div>
 		)

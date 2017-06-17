@@ -20,6 +20,7 @@ class App extends Component {
 				<Route path='/login' component={Login} />
 				<PrivateRoute path='/newroom' isLoggedIn={this.props.isLoggedIn} component={Room} />
 				<PrivateRoute path='/room/:id' isLoggedIn={this.props.isLoggedIn} component={Room} />
+				<Route path="*" status={404} component={Lobby}/>
 			</Switch>
 		);
 	};

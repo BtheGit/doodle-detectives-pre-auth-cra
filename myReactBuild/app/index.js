@@ -28,6 +28,13 @@ const store = createStore(
 
 const history = createBrowserHistory()
 
+const location = history.location;
+
+const unlisten = history.listen((location, action) => {
+  console.log(`The current URL is ${location.pathname}${location.search}${location.hash}`)
+  console.log(`The last navigation action was ${action}`)
+})
+
 ReactDOM.render(
 	<Provider store={store}>
 		<Router history={history}>

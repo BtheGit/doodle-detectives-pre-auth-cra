@@ -3,6 +3,7 @@ import Chatroom from './Chatroom.js';
 import Drawingboard from './Drawingboard.js';
 import io from 'socket.io-client';
 import { connect } from 'react-redux';
+import './gameroom.css';
 
 //For now, I will handle all server communication and global state from here
 //Could potentially be pushed off to redux and middleware later
@@ -20,7 +21,7 @@ class Room extends Component {
       hasVotedToBegin: false, //Used for conditionally rendering status display after voting
       sessionState: {
         players: [],
-        currentSessionStatus: 'isGameActive', //['isWaitingForPlayers', 'isWaitingToStart', 'isGameActive']
+        currentSessionStatus: '', //['isWaitingForPlayers', 'isWaitingToStart', 'isGameActive']
       },
       gameState: {
         currentPhase: '', //['drawing', 'detecting', 'approving', 'gameover']
@@ -75,6 +76,9 @@ class Room extends Component {
     else if(packet.type === 'game_state_update') {
       //set local isGameActive toggle here which will prevent drawing unless activePlayer is me
       this.handleGameStateUpdate(packet.gameState);
+    }
+    else if(packet.type === 'display_secret_phase') {
+      this.handleDisplaySecretPhase(packet.payload);
     }
   }
 

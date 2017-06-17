@@ -50,7 +50,9 @@ const shuffleArray = (array) => {
 }
 
 class Game {
-	constructor(players) {
+	constructor(session, players) {
+		//Give us access to session socket handlers for broadcasting
+		this.session = session; 
 		//NB: For the current implementation, the players cannot change after this point.
 		//Players leaving or not participating will wreck the game.
 		//Game variables
@@ -123,14 +125,48 @@ class Game {
 	_setupNewGame(players) {
 		players = this._setFakePlayer(players);
 		players = this._setPlayerColors(players, COLORS);
-		console.log(players)
 		players = this._setPlayerTurnOrder(players);
 		this.state.playerList = players;
-
 		this.state.turnList = this._createTurnList(players);
-
 		this.state.currentSecret = this._generateSecret(SECRETS);
+
 	}
+
+	//Here I am manually accessing the sockets stored in the mutable playerList (instead of using a higher order
+	//function passed from the gameSession) to emit the secret to all players except the fake who only receives
+	//'xxx'. Client side handler will render based on that.
+	_displaySecret(secret) {
+		this.state.playerList.forEach( (player, index) => {
+			const packet = {
+				type: 'display_secret_phase',
+				payload: {
+					category: this.state.currentSecret.category,
+					secret: `${player.isFake ? 'XXX' : this.state.currentSecret.secret}`
+				}
+			}
+			player.socket.emit('packet', packet)
+		});
+		
+	}
+
+	_gameLoop() {
+		this._displaySecret(this.state.secret);
+		//wait 10 seconds
+		while(turnList.length) {
+			const turn = turnList.shift()
+			this._nextTurn(turn)
+			//wait 30 seconds
+		}
+		this._detectingVote()
+		//wait for votes
+		//tally votes 
+		//---ties = automatic win for fake 
+		// if(voteWinner !== fake || vote is a tie) -> go to gameover state and wait for restart
+
+
+	}
+
+	//Need to set up our own internal 
 
 	//Loop through array of turns
 			// iterate through turn array(

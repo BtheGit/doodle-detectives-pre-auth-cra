@@ -7,7 +7,7 @@ const RoomsMenu = ({activeRooms}) => {
 		return	activeRooms.map((room, index) => {
 			return (
 				<div className="roomsmenu-room" key={index}>
-					<div className="roomsmenu-room-players">
+					<div className="roomsmenu-room-player">
 						{room.clients.map((player, index) => <div key={index}>{player}</div>)}
 					</div>
 					<div className="roomsmenu-room-link">
@@ -25,7 +25,7 @@ const RoomsMenu = ({activeRooms}) => {
 	}
 
 	return (
-		<div className='roomsmenu'>
+		<div className='roomsmenu-container'>
 			{activeRooms.length > 0 ? showRooms() : showEmpty()}
 		</div>
 	)

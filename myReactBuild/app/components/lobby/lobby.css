@@ -1,0 +1,46 @@
+.lobby-container {
+	height: 100%;
+	width: 100%;
+	background-color: yellow;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.lobby-header {
+	background-color: teal;
+}
+
+.lobby-loggedin-container {
+	background-color: #FF9F42;
+	width: 80%;
+}
+
+.lobby-username {
+	background-color: #A5EDF8;
+}
+
+.roomsmenu-container {
+	background-color: #ED8888;
+	height: 100%;
+	width: 100%;
+}
+
+.roomsmenu-room {
+	background-color: #ADFC8E;
+	display: flex;
+	flex-direction: row;
+	width:100%;
+}
+
+.roomsmenu-room-player {
+	background-color: #3AF835;
+}
+
+.roomsmenu-room-link {
+	background-color: #FFCE0C;
+}
+
+.lobby-misc {
+	background-color: #FF5BCF;
+}

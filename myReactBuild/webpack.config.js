@@ -9,7 +9,8 @@ const commonConfig = {
 			}, 
 		output: {
 			path: path.join(__dirname, '/../public/app'),
-			filename: '[name].js'
+			publicPath: '/',
+			filename: 'js/[name].js'
 		},
 	  module: {
 	    rules: [
@@ -52,11 +53,11 @@ const commonConfig = {
 		plugins: [
 			// new webpack.optimize.UglifyJsPlugin({minimize: true}),
 			new HtmlWebpackPlugin({
-				filename: 'index.html',
+				filename: 'main.html',
 				template: 'app/index.html',
 			}),
 			new ExtractTextPlugin({
-				filename: '[name].css',
+				filename: 'styles/[name].css',
 				disable: false,
 				allChunks: true,
 			}),

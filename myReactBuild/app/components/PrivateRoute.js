@@ -1,5 +1,6 @@
 import React from 'react';
 import { Route, Redirect } from 'react-router';
+import { withRouter } from 'react-router';
 
 const PrivateRoute = ({component: Component, isLoggedIn, ...rest}) => {
 	return(
@@ -14,4 +15,4 @@ const PrivateRoute = ({component: Component, isLoggedIn, ...rest}) => {
 };
 
 													// <Redirect to='/login' />
-export default PrivateRoute;
+export default withRouter(PrivateRoute);

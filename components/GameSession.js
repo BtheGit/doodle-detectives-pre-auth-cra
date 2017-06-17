@@ -17,6 +17,7 @@ class GameSession {
 		this.chatLog = [];
 		this.currentSessionStatus = 'isWaitingForPlayers';
 		this.game = null;
+		// setTimeout(() => this.initGame(), 3000)
 		// this.usedSecrets = [] //figure out the best way to track variables like secrets/scores between games
 	}
 
@@ -62,15 +63,17 @@ class GameSession {
 
 	//perhaps I should pass this function down and allow game to use it (so game doesn't have to directly track sockets)
 	broadcastGameState() {
-		const gameState = this.game.retrieveState();
+		if(this.game) {
+			const gameState = this.game.retrieveState();
 
-		const clients = [...this.clients] || []; //To avoid server crash if there are no clients
-		clients.forEach( client => {
-			client.send({
-				type: 'game_state_update',
-				gameState
+			const clients = [...this.clients] || []; //To avoid server crash if there are no clients
+			clients.forEach( client => {
+				client.send({
+					type: 'game_state_update',
+					gameState
+				})
 			})
-		})		
+		}
 	}
 
 	broadcastSessionState() {
@@ -126,14 +129,14 @@ class GameSession {
 
 	//This is triggered in _updateVoteStatus() when all votes have been collected
 	initGame() {
-		//Clear votes for next game
-		this.votedToBegin.clear();
+		//Clear votes for next game //disabled for testing
+		// this.votedToBegin.clear();
 		//This will flag the client to render the status bar differently
 		this.currentSessionStatus = 'isGameActive';
 		//Create a copy of players for the game to manipulate without affecting session members
 		const players = this._createPlayerList();
 		//Create new instance of a game (Games will only be used once)
-		this.game = new Game(players)
+		this.game = new Game(this, players)
 		//return this.game so it's accessible to socket.io
 		//OR. Sockets are available in this.clients, so nevermind
 	}
