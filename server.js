@@ -48,8 +48,20 @@ if(process.env.NODE_ENV !== 'production') {
 
   const compiler = webpack(config)
 
-  app.use(webpackDevMiddleware(compiler, { noInfo: true, publicPath: config.output.publicPath }));
-  app.use(webpackHotMiddleware(compiler));
+  app.use(webpackDevMiddleware(compiler, { 
+  	noInfo: false, 
+  	hot: true,
+  	stats: {
+  		colors: true
+  	},
+  	publicPath: config.output.publicPath 
+  }));
+
+  app.use(webpackHotMiddleware(compiler, {
+  	log: false,
+  	path: '/__what',
+  	heartbeat: 2000
+  }));
 }
 else {
 	//TODO: Configure view engine 

@@ -68,7 +68,7 @@ class Lobby extends Component {
 	render() {
 		return(
 			<div className="lobby-container">
-				<h1 className="lobby-header">Doodle Detectives!!!</h1>
+				<h1 className="lobby-header">Doodle Detectives!</h1>
 				{this.props.isLoggedIn ? this.renderLoggedIn() : this.renderGuest()}
 			</div>
 		)

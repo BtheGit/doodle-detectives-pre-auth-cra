@@ -8,18 +8,18 @@
 }
 
 .lobby-header {
-	background-color: teal;
+	background-color: #C3D7AB;
 	padding: 5px;
 	border-radius: 5px;
 }
 
 .lobby-loggedin-container {
-	background-color: #FF9F42;
+	background-color: rgba(0,0,0,0.1);
 	width: 80%;
 }
 
 .lobby-username {
-	background-color: #A5EDF8;
+	border: 1px solid #FFD7D7;
 }
 
 .roomsmenu-container {

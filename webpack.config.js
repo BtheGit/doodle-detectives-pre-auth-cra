@@ -4,9 +4,21 @@ const path 							= require('path'),
 			ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 const commonConfig = {
+		// entry: {
+		// 	app: path.join(__dirname, 'src') //will default to index.js if 'app/index.js' not specified
+		// }, 
 		entry: {
-			app: path.join(__dirname, 'src') //will default to index.js if 'app/index.js' not specified
-			}, 
+			app: [		
+		    'react-hot-loader/patch',
+		    'webpack-hot-middleware/client?path=/__what&timeout=2000&overlay=false',
+		    // activate HMR for React
+		    // and connect to the provided endpoint
+		    // 'webpack/hot/only-dev-server',
+		    // './src/index.js'
+				path.join(__dirname, 'src') //will default to index.js if 'app/index.js' not specified
+			]
+			
+		}, 
 		output: {
 			path: path.join(__dirname, 'dist'),
 			publicPath: '/',
@@ -20,10 +32,10 @@ const commonConfig = {
 	        	use: [ 'css-loader'],
   	      }),
 	      },
-				{
-					test: /\.(jpg|png|svg)$/,
-					use: 'file-loader?name=media/[name].[ext]',
-        },				      
+				// {
+				// 	test: /\.(jpg|png|svg)$/,
+				// 	use: 'file-loader?name=media/[name].[ext]',
+    //     },				      
       	{
 	        test: /\.html$/,
 	        use: 'html-loader',
@@ -34,7 +46,8 @@ const commonConfig = {
 		      use: {
 		        loader: 'babel-loader',
 		        options: {
-		          presets: ['env', 'react', 'stage-0']
+		          presets: ['env', 'react', 'stage-0'],
+		          plugins: ['react-hot-loader/babel']
 		        }
 		      }
 		    },
@@ -57,22 +70,15 @@ const commonConfig = {
 const productionConfig = () => commonConfig;
 
 const developmentConfig = () => {
-	const config = {
+	const devConfig = {
 		devServer: {
 			historyApiFallback: true, //History Api routing fallback for HTML5
 			stats: 'errors-only', //Less console output - only errors
 			host: process.env.HOST, //default to 'localhost'
 			port: process.env.PORT, //defaults to 8080
 	    contentBase: './dist',
-	    hot: true
-
-			//the overlay will show eslint warnings in the browser and force you to fix them before continuing
-			// overlay: {
-			// 	errors: true,
-			// 	warnings: true,
-			// }
 		},
-		devtool: 'source-map', 
+		devtool: 'eval', //source maps slow 'eval' is faster
 	};
 	//The following is my own crappy way of deep merging the production and dev objects when module/plugins are in both
 	//Each new type of duplicative property/key will require it's own merge procedure using this method. But it lets me follow
@@ -90,15 +96,16 @@ const developmentConfig = () => {
 	// 			},
 	// ];
 
-	const plugins = [
+	const devPlugins = [
     new webpack.HotModuleReplacementPlugin(),
+    new webpack.NamedModulesPlugin(),
     new webpack.NoEmitOnErrorsPlugin()
 	];
 
-	commonConfig.plugins = commonConfig.plugins.concat(plugins);
+	commonConfig.plugins = commonConfig.plugins.concat(devPlugins);
 	// commonConfig.module.rules = commonConfig.module.rules.concat(rules);
 
-	return Object.assign({}, commonConfig, config);
+	return Object.assign({}, commonConfig, devConfig);
 }
 
 // module.exports = (env) => {

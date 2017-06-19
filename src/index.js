@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Router } from 'react-router-dom';
+import { AppContainer } from 'react-hot-loader';
 import createBrowserHistory from 'history/createBrowserHistory'
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
@@ -35,15 +36,22 @@ const unlisten = history.listen((location, action) => {
   console.log(`The last navigation action was ${action}`)
 })
 
-ReactDOM.render(
-	<Provider store={store}>
-		<Router history={history}>
-			<App />
-		</Router>
-	</Provider>,
-	document.getElementById('root')
-);
+const render = (Component) => {
+	ReactDOM.render(
+		<AppContainer>
+			<Provider store={store}>
+				<Router history={history}>
+					<Component />
+				</Router>
+			</Provider>
+		</AppContainer>,
+		document.getElementById('root')
+	);
+};
+
+render(App);
 
 if(module.hot) {
-	console.log('hot')
+	console.log(module.hot)
+	module.hot.accept('./App', () => render(App))
 }
