@@ -39,37 +39,38 @@ const sessionOptions = {
 //TODO: Configure express
 const app = express();
 
-//(From React-Starter) Setting up a webpack dev server in development with hot reloading
+//########## WEBPACK in development with hot reloading
 if(process.env.NODE_ENV !== 'production') {
   const webpackDevMiddleware 	= require('webpack-dev-middleware'),
   			webpackHotMiddleware 	= require('webpack-hot-middleware'),
   			webpack 							= require('webpack'),
-  			config 								= require('./webpack.config.js');
+  			webpackConfig 				= require('./webpack.config.js');
 
-  const compiler = webpack(config)
+  const compiler = webpack(webpackConfig);
 
   app.use(webpackDevMiddleware(compiler, { 
-  	noInfo: false, 
-  	hot: true,
-  	stats: {
-  		colors: true
-  	},
-  	publicPath: config.output.publicPath 
+  	noInfo: true, 
+  	// hot: true,
+  	// stats: {
+  	// 	colors: true,
+  	// 	chunks: true,
+  	// 	'errors-only': true
+  	// },
+  	publicPath: webpackConfig.output.publicPath 
   }));
 
-  app.use(webpackHotMiddleware(compiler, {
-  	log: false,
-  	path: '/__what',
-  	heartbeat: 2000
-  }));
+  app.use(webpackHotMiddleware(compiler));
+  // app.use(webpackHotMiddleware(compiler, {
+  // 	overlay: true,
+  // 	path: '/__what',
+  // 	heartbeat: 2000
+  // }));
 }
 else {
 	//TODO: Configure view engine 
 	app.use(express.static(path.join(__dirname, '/public/app')));
 	
 }
-
-
 
 //Log requests to the console
 app.use(morgan('dev')); 
@@ -93,18 +94,19 @@ require('./config/passportConfig.js')
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Enable CORS from client-side (look into using default CORS library)
-// app.use(function(req, res, next) {  
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
-//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials");
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   next();
-// });
+// Enable CORS from client-side (TODO look into using default CORS library)
+app.use(function(req, res, next) {  
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials");
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
 
 // // The flash middleware let's us use req.flash('error', 'Shit!'), which will then pass that message to the next page the user requests
 app.use(flash());
 
+//####### ROUTES 
 
 //TODO: Route for API requests (list of active game sessions)
 app.get('/API/getactiveroomslist', (req, res) => {
@@ -117,6 +119,8 @@ app.get('*', (req, res) => {
 	console.log(req.session)
 	res.sendFile(path.join(__dirname, '/public/app/main.html'))
 })
+
+//############## CUSTOM SESSIONS FOR SOCKET.IO GAME ###################
 
 //TODO: Create Map of Game Sessions
 const GameClient = require('./components/GameClient');

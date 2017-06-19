@@ -10,7 +10,8 @@ const commonConfig = {
 		entry: {
 			app: [		
 		    'react-hot-loader/patch',
-		    'webpack-hot-middleware/client?path=/__what&timeout=2000&overlay=false',
+		    'webpack-hot-middleware/client',
+		    // 'webpack-hot-middleware/client?path=/__what&timeout=2000&overlay=false',
 		    // activate HMR for React
 		    // and connect to the provided endpoint
 		    // 'webpack/hot/only-dev-server',
@@ -78,7 +79,7 @@ const developmentConfig = () => {
 			port: process.env.PORT, //defaults to 8080
 	    contentBase: './dist',
 		},
-		devtool: 'eval', //source maps slow 'eval' is faster
+		devtool: 'source-map', //source maps slow 'eval' is faster
 	};
 	//The following is my own crappy way of deep merging the production and dev objects when module/plugins are in both
 	//Each new type of duplicative property/key will require it's own merge procedure using this method. But it lets me follow
