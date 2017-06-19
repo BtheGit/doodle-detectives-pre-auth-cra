@@ -5,10 +5,11 @@ const path 							= require('path'),
 
 const commonConfig = {
 		entry: {
-			app: path.join(__dirname, 'app') //will default to index.js if 'app/index.js' not specified
+			app: path.join(__dirname, 'src') //will default to index.js if 'app/index.js' not specified
 			}, 
 		output: {
-			path: path.join(__dirname, '/../public/app'),
+			path: path.join(__dirname, 'dist'),
+			publicPath: '/',
 			filename: 'js/[name].js'
 		},
 	  module: {
@@ -16,12 +17,7 @@ const commonConfig = {
 	      {
 	        test: /\.css$/,
 	        use: ExtractTextPlugin.extract({
-	        	// fallback: 'style-loader',
-	        	use: [ 
-  	        	// 'style-loader', 
-  	        	'css-loader',
-  	        	// 'postcss-loader', 
-  	        ],
+	        	use: [ 'css-loader'],
   	      }),
 	      },
 				{
@@ -34,7 +30,7 @@ const commonConfig = {
 		    },
 		    {
 		      test: /\.js$/,
-		      exclude: /(node_modules|bower_components)/,
+		      exclude: /node_modules/,
 		      use: {
 		        loader: 'babel-loader',
 		        options: {
@@ -42,18 +38,13 @@ const commonConfig = {
 		        }
 		      }
 		    },
-
-	      // {
-	      //   test: /\.scss$/,
-	      //   use: [ 'style-loader', 'css-loader', 'sass-loader' ],
-	      // },
 	    ],
 	  },
 		plugins: [
-			// new webpack.optimize.UglifyJsPlugin({minimize: true}),
+			//PROD new webpack.optimize.UglifyJsPlugin({minimize: true}),
 			new HtmlWebpackPlugin({
 				filename: 'main.html',
-				template: 'app/index.html',
+				template: 'src/index.html',
 			}),
 			new ExtractTextPlugin({
 				filename: 'styles/[name].css',
@@ -72,6 +63,8 @@ const developmentConfig = () => {
 			stats: 'errors-only', //Less console output - only errors
 			host: process.env.HOST, //default to 'localhost'
 			port: process.env.PORT, //defaults to 8080
+	    contentBase: './dist',
+	    hot: true
 
 			//the overlay will show eslint warnings in the browser and force you to fix them before continuing
 			// overlay: {
@@ -81,7 +74,6 @@ const developmentConfig = () => {
 		},
 		devtool: 'source-map', 
 	};
-
 	//The following is my own crappy way of deep merging the production and dev objects when module/plugins are in both
 	//Each new type of duplicative property/key will require it's own merge procedure using this method. But it lets me follow
 	//the structure of surviveJS without having to use the author's own webpack-merge library and file structure which felt
@@ -98,17 +90,23 @@ const developmentConfig = () => {
 	// 			},
 	// ];
 
-	// const plugins = [];
+	const plugins = [
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoEmitOnErrorsPlugin()
+	];
 
-	// commonConfig.plugins = commonConfig.plugins.concat(plugins);
+	commonConfig.plugins = commonConfig.plugins.concat(plugins);
 	// commonConfig.module.rules = commonConfig.module.rules.concat(rules);
 
 	return Object.assign({}, commonConfig, config);
 }
 
-module.exports = (env) => {
-	if (env === 'production') {
-		return productionConfig();
-	}
-	return developmentConfig();
-}
+// module.exports = (env) => {
+// 	if (env === 'production') {
+// 		return productionConfig();
+// 	}
+// 	return developmentConfig();
+// }
+
+//TODO: Set up dev and prod configs and call them appropriately. Right now dev is hardcoded.
+module.exports = developmentConfig();

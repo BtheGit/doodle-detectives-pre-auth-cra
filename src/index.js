@@ -1,0 +1,49 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Router } from 'react-router-dom';
+import createBrowserHistory from 'history/createBrowserHistory'
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import thunk from 'redux-thunk';
+import 'whatwg-fetch'; //Polyfill for fetch()
+// import { composeWithDevTools } from 'redux-devtools-extension';
+import gameReducer from './redux/reducers/gameReducer.js';
+import App from './App';
+import './index.css';
+
+//TODO? save store state to localstorage after every action. Restore by injecting
+//localstorage as initialstate when creating store below (if exists)
+//PROBLEM = if it no longer relevant (from old game/room) would need to check if still pertinent
+//Or more likely retrieve it from server (can dispatch copy of state to server after each action, then
+//have localstorage only keep user details, verify with server and receive saved state)
+
+const rootReducer = combineReducers({
+	gameReducer
+});
+
+const store = createStore(
+	rootReducer,
+	applyMiddleware(thunk)
+);
+
+const history = createBrowserHistory()
+
+const location = history.location;
+
+const unlisten = history.listen((location, action) => {
+  console.log(`The current URL is ${location.pathname}${location.search}${location.hash}`)
+  console.log(`The last navigation action was ${action}`)
+})
+
+ReactDOM.render(
+	<Provider store={store}>
+		<Router history={history}>
+			<App />
+		</Router>
+	</Provider>,
+	document.getElementById('root')
+);
+
+if(module.hot) {
+	console.log('hot')
+}

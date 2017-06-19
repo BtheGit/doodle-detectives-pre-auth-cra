@@ -38,8 +38,26 @@ const sessionOptions = {
 
 //TODO: Configure express
 const app = express();
-//TODO: Configure view engine 
-app.use(express.static(path.join(__dirname, '/public/app')));
+
+//(From React-Starter) Setting up a webpack dev server in development with hot reloading
+if(process.env.NODE_ENV !== 'production') {
+  const webpackDevMiddleware 	= require('webpack-dev-middleware'),
+  			webpackHotMiddleware 	= require('webpack-hot-middleware'),
+  			webpack 							= require('webpack'),
+  			config 								= require('./webpack.config.js');
+
+  const compiler = webpack(config)
+
+  app.use(webpackDevMiddleware(compiler, { noInfo: true, publicPath: config.output.publicPath }));
+  app.use(webpackHotMiddleware(compiler));
+}
+else {
+	//TODO: Configure view engine 
+	app.use(express.static(path.join(__dirname, '/public/app')));
+	
+}
+
+
 
 //Log requests to the console
 app.use(morgan('dev')); 
